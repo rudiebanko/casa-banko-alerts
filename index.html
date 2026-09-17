@@ -35,59 +35,55 @@
     }
 
     .subtitle {
-      color: #888;
-      margin-bottom: 35px;
-      font-size: 14px;
+      color: #777;
+      font-size: 13px;
+      margin-bottom: 38px;
     }
 
     button {
       width: 100%;
-      height: 78px;
-      margin: 9px 0;
       border: none;
-      border-radius: 16px;
+      border-radius: 14px;
+      padding: 21px;
+      margin-bottom: 14px;
       color: white;
-      font-size: 19px;
+      font-size: 17px;
       font-weight: bold;
       cursor: pointer;
-    }
-
-    .buy {
-      background: #168c4b;
-    }
-
-    .sell {
-      background: #c93636;
-    }
-
-    .sl {
-      background: #8f2626;
-    }
-
-    .closed {
-      background: #333;
     }
 
     button:active {
       transform: scale(0.98);
     }
 
-    button:disabled {
-      opacity: 0.5;
+    .buy {
+      background: #199653;
+    }
+
+    .sell {
+      background: #d43737;
+    }
+
+    .sl {
+      background: #a52828;
+    }
+
+    .breakeven {
+      background: #b88717;
+    }
+
+    .profit {
+      background: #1877b8;
+    }
+
+    .closed {
+      background: #383838;
     }
 
     #status {
-      min-height: 25px;
-      margin-top: 20px;
+      min-height: 24px;
+      margin-top: 18px;
       color: #aaa;
-    }
-
-    .settings {
-      margin-top: 25px;
-      background: transparent;
-      border: 1px solid #333;
-      height: 48px;
-      color: #777;
       font-size: 14px;
     }
   </style>
@@ -95,114 +91,72 @@
 
 <body>
 
-<div class="panel">
+  <div class="panel">
 
-  <h1>CASA BANKO</h1>
-  <div class="subtitle">TRADE ALERTS</div>
+    <h1>CASA BANKO</h1>
+    <div class="subtitle">TRADE ALERTS</div>
 
-  <button class="buy" onclick="sendAlert('buy', 'BUYING NOW')">
-    🟢 BUYING NOW
-  </button>
+    <button class="buy" onclick="sendAlert('buy')">
+      🟢 BUYING NOW
+    </button>
 
-  <button class="sell" onclick="sendAlert('sell', 'SELLING NOW')">
-    🔴 SELLING NOW
-  </button>
+    <button class="sell" onclick="sendAlert('sell')">
+      🔴 SELLING NOW
+    </button>
 
-  <button class="sl" onclick="sendAlert('sl', 'SL HIT')">
-    🛑 SL HIT
-  </button>
+    <button class="sl" onclick="sendAlert('sl')">
+      🛑 SL HIT
+    </button>
 
-  <button class="closed" onclick="sendAlert('closed', 'CLOSED OUT')">
-    ✅ CLOSED OUT
-  </button>
+    <button class="breakeven" onclick="sendAlert('breakeven')">
+      🟡 BREAKEVEN
+    </button>
 
-  <div id="status"></div>
+    <button class="profit" onclick="sendAlert('profit')">
+      💰 TOOK PROFIT
+    </button>
 
-  <button class="settings" onclick="resetKey()">
-    CHANGE PRIVATE KEY
-  </button>
+    <button class="closed" onclick="sendAlert('closed')">
+      ✅ CLOSED OUT
+    </button>
 
-</div>
+    <div id="status"></div>
 
-<script>
+  </div>
 
-const ENDPOINT =
-  "https://tpziplzdiifxryoourgp.supabase.co/functions/v1/send-trade-alert";
+  <script>
+    const FUNCTION_URL =
+      "https://tpziplzdiifxryoourgp.supabase.co/functions/v1/send-trade-alert";
 
-function getKey() {
-  let key = localStorage.getItem("casaBankoControlKey");
+    async function sendAlert(action) {
+      const status = document.getElementById("status");
 
-  if (!key) {
-    key = prompt("Enter your CASA BANKO private control key:");
+      status.textContent = "Sending...";
 
-    if (key) {
-      localStorage.setItem("casaBankoControlKey", key);
+      try {
+        const response = await fetch(FUNCTION_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            action: action
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Alert failed");
+        }
+
+        status.textContent = "✅ Alert sent!";
+      } catch (error) {
+        console.error(error);
+        status.textContent = "❌ " + error.message;
+      }
     }
-  }
-
-  return key;
-}
-
-function resetKey() {
-  localStorage.removeItem("casaBankoControlKey");
-  alert("Private key removed from this device.");
-}
-
-async function sendAlert(action, label) {
-
-  const confirmed = confirm(`Send "${label}" to RUDIE ANALYSIS?`);
-
-  if (!confirmed) return;
-
-  const key = getKey();
-
-  if (!key) {
-    alert("Private key required.");
-    return;
-  }
-
-  const status = document.getElementById("status");
-  const buttons = document.querySelectorAll("button");
-
-  buttons.forEach(button => button.disabled = true);
-
-  status.textContent = "Sending...";
-
-  try {
-
-    const response = await fetch(ENDPOINT, {
-      method: "POST",
-
-      headers: {
-        "Content-Type": "application/json",
-        "x-control-key": key
-      },
-
-      body: JSON.stringify({
-        action: action
-      })
-    });
-
-    const data = await response.json();
-
-    if (response.ok && data.success) {
-      status.textContent = "✓ Alert sent";
-    } else if (response.status === 401) {
-      localStorage.removeItem("casaBankoControlKey");
-      status.textContent = "Wrong private key";
-      alert("Private key incorrect. Enter it again.");
-    } else {
-      status.textContent = "Error sending alert";
-    }
-
-  } catch (error) {
-    status.textContent = "Connection error";
-  }
-
-  buttons.forEach(button => button.disabled = false);
-}
-
-</script>
+  </script>
 
 </body>
 </html>
