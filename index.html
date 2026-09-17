@@ -76,6 +76,14 @@
       background: #1877b8;
     }
 
+    .reduce-sl {
+      background: #b86c18;
+    }
+
+    .sl-at-be {
+      background: #315f9c;
+    }
+
     .closed {
       background: #383838;
     }
@@ -116,6 +124,14 @@
       💰 TOOK PROFIT
     </button>
 
+    <button class="reduce-sl" onclick="sendAlert('reduceSl')">
+      🟠 REDUCING SL -50%
+    </button>
+
+    <button class="sl-at-be" onclick="sendAlert('slAtBe')">
+      🔵 SL AT BREAKEVEN
+    </button>
+
     <button class="closed" onclick="sendAlert('closed')">
       ✅ CLOSED OUT
     </button>
@@ -129,11 +145,13 @@
       "https://tpziplzdiifxryoourgp.supabase.co/functions/v1/send-trade-alert";
 
     async function sendAlert(action) {
+
       const status = document.getElementById("status");
 
       status.textContent = "Sending...";
 
       try {
+
         const response = await fetch(FUNCTION_URL, {
           method: "POST",
           headers: {
@@ -151,8 +169,11 @@
         }
 
         status.textContent = "✅ Alert sent!";
+
       } catch (error) {
+
         console.error(error);
+
         status.textContent = "❌ " + error.message;
       }
     }
